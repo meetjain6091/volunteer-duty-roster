@@ -1,0 +1,50 @@
+---
+# Ansible Playbook for Automated Rollback & Recovery
+# Demonstrates Rollback to Previous Stable Release (Deliverable 14)
+- name: Emergency Rollback to Previous Stable Release
+  hosts: app_servers
+  become: yes
+  vars:
+    app_name: volunteer-duty-roster
+    app_port: 8080
+    fallback_image: meetjain6091/volunteer-duty-roster:0.9.0
+    install_dir: /opt/volunteer-duty-roster
+
+  tasks:
+    - name: 1. Record rollback trigger event in log
+      lineinfile:
+        path: "{{ install_dir }}/logs/deploy.log"
+        create: yes
+        line: "[{{ lookup('pipe', 'date +%Y-%m-%dT%H:%M:%S') }}] ROLLBACK INITIATED: Falling back to {{ fallback_image }}"
+
+    - name: 2. Terminate unstable release container
+      command: docker rm -f {{ app_name }}
+      register: stop_unstable
+      failed_when: false
+      changed_when: stop_unstable.rc == 0
+
+    - name: 3. Launch verified previous stable container
+      command: >
+        docker run -d
+        --name {{ app_name }}
+        -p {{ app_port }}:8080
+        --restart unless-stopped
+        {{ fallback_image }}
+      register: rollback_run
+
+    - name: 4. Await stable recovery startup
+      pause:
+        seconds: 12
+
+    - name: 5. Verify restored node health status
+      uri:
+        url: "http://localhost:{{ app_port }}/login"
+        status_code: 200
+      register: rollback_health
+      retries: 4
+      delay: 5
+      until: rollback_health.status == 200
+
+    - name: 6. Log successful rollback restoration
+      debug:
+        msg: "Rollback completed successfully! Application restored to stable state on port {{ app_port }}."

@@ -103,4 +103,9 @@ To demonstrate merge conflict management for academic evaluation:
 5. Tagged release `v1.0.0` is cut from `main`.
 
 ## Current Release Baseline
-Current Baseline: Mainline develop branch v0.9.5-SNAPSHOT (Develop Mainline)
+Current Baseline: Release v1.0.0-RELEASE (Harmonized Status Workflow & DevOps CI/CD Baseline)
+- **Roll No:** 23102C0068
+- **Name:** Meet Jain
+- **Resolved Date:** October 25, 2026
+- **Status:** Release-Ready Source Baseline Verified Across 14 Unit and Selenium E2E Tests
+
