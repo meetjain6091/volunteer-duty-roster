@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Volunteer Profile')}"></head>
+<body>
+    <div class="app-layout">
+        <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1>&#128100; Volunteer Profile: <span th:text="${user.fullName}">Meet Jain</span></h1>
+                    <div class="breadcrumb">
+                        <a th:href="@{/volunteers}">Volunteers</a> / <span th:text="'#' + ${user.id}">#1</span>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <a th:href="@{/volunteers/edit/{id}(id=${user.id})}" class="btn btn-warning"
+                       sec:authorize="hasRole('ADMIN')">&#9998; Edit Profile</a>
+                    <a th:href="@{/volunteers}" class="btn btn-outline">&#8592; Back</a>
+                </div>
+            </div>
+
+            <div class="card" style="max-width: 700px;">
+                <div class="card-header">
+                    <h3>User Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">User ID</div>
+                            <div class="detail-value" th:text="'#' + ${user.id}">#1</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Full Name</div>
+                            <div class="detail-value" th:text="${user.fullName}">Meet Jain</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Username</div>
+                            <div class="detail-value" th:text="${user.username}">meetjain</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Email</div>
+                            <div class="detail-value" th:text="${user.email}">meet@volunteer.org</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Phone</div>
+                            <div class="detail-value" th:text="${user.phone != null ? user.phone : 'Not provided'}">--</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Role</div>
+                            <div class="detail-value">
+                                <span class="badge" th:classappend="'badge-' + ${user.role.name().toLowerCase()}"
+                                      th:text="${user.role.displayName}">Volunteer</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Account Status</div>
+                            <div class="detail-value">
+                                <span th:if="${user.active}" class="badge badge-completed">Active</span>
+                                <span th:unless="${user.active}" class="badge badge-cancelled">Inactive</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

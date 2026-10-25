@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Duty Details')}"></head>
+<body>
+    <div class="app-layout">
+        <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1>&#128203; Duty Details: <span th:text="${duty.title}">Title</span></h1>
+                    <div class="breadcrumb">
+                        <a th:href="@{/duties}">Duties</a> / <span th:text="'#' + ${duty.id}">#1</span>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <a th:href="@{/duties/edit/{id}(id=${duty.id})}" class="btn btn-warning" id="btn-edit-duty"
+                       sec:authorize="hasAnyRole('ADMIN','COORDINATOR')">&#9998; Edit</a>
+                    <a th:href="@{/duties}" class="btn btn-outline">&#8592; Back to List</a>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <!-- Status Workflow Visualizer -->
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header">
+                    <h3>Lifecycle Status Workflow</h3>
+                    <span class="badge" th:classappend="'badge-' + ${duty.status.name().toLowerCase()}"
+                          th:text="${duty.status.displayName}" id="currentStatusBadge">Status</span>
+                </div>
+                <div class="card-body">
+                    <div class="status-workflow">
+                        <div class="status-step"
+                             th:classappend="${duty.status.name() == 'DRAFT' ? 'active' : (duty.status.name() != 'CANCELLED' ? 'completed' : '')}">
+                            <div class="step-dot">1</div>
+                            <span>Draft</span>
+                        </div>
+                        <div class="step-line"
+                             th:classappend="${duty.status.name() != 'DRAFT' && duty.status.name() != 'CANCELLED' ? 'completed' : ''}"></div>
+
+                        <div class="status-step"
+                             th:classappend="${duty.status.name() == 'ASSIGNED' ? 'active' : (duty.status.name() == 'CONFIRMED' || duty.status.name() == 'COMPLETED' ? 'completed' : '')}">
+                            <div class="step-dot">2</div>
+                            <span>Assigned</span>
+                        </div>
+                        <div class="step-line"
+                             th:classappend="${duty.status.name() == 'CONFIRMED' || duty.status.name() == 'COMPLETED' ? 'completed' : ''}"></div>
+
+                        <div class="status-step"
+                             th:classappend="${duty.status.name() == 'CONFIRMED' ? 'active' : (duty.status.name() == 'COMPLETED' ? 'completed' : '')}">
+                            <div class="step-dot">3</div>
+                            <span>Confirmed</span>
+                        </div>
+                        <div class="step-line"
+                             th:classappend="${duty.status.name() == 'COMPLETED' ? 'completed' : ''}"></div>
+
+                        <div class="status-step"
+                             th:classappend="${duty.status.name() == 'COMPLETED' ? 'completed active' : ''}">
+                            <div class="step-dot">4</div>
+                            <span>Completed</span>
+                        </div>
+
+                        <div th:if="${duty.status.name() == 'CANCELLED'}" style="margin-left: 20px;">
+                            <span class="badge badge-cancelled">&#10060; Cancelled</span>
+                        </div>
+                    </div>
+
+                    <!-- Status Transition Actions -->
+                    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <strong style="margin-right: 12px; font-size: 13px;">Change Status To:</strong>
+                        <div class="btn-group" style="display: inline-flex;">
+                            <form th:action="@{/duties/status/{id}(id=${duty.id})}" method="post" style="display:inline;">
+                                <input type="hidden" name="status" value="DRAFT"/>
+                                <button type="submit" class="btn btn-outline btn-sm" id="btn-status-draft"
+                                        th:disabled="${duty.status.name() == 'DRAFT'}"
+                                        sec:authorize="hasAnyRole('ADMIN','COORDINATOR')">Draft</button>
+                            </form>
+                            <form th:action="@{/duties/status/{id}(id=${duty.id})}" method="post" style="display:inline;">
+                                <input type="hidden" name="status" value="ASSIGNED"/>
+                                <button type="submit" class="btn btn-outline btn-sm" id="btn-status-assigned"
+                                        th:disabled="${duty.status.name() == 'ASSIGNED'}"
+                                        sec:authorize="hasAnyRole('ADMIN','COORDINATOR')">Assigned</button>
+                            </form>
+                            <form th:action="@{/duties/status/{id}(id=${duty.id})}" method="post" style="display:inline;">
+                                <input type="hidden" name="status" value="CONFIRMED"/>
+                                <button type="submit" class="btn btn-warning btn-sm" id="btn-status-confirmed"
+                                        th:disabled="${duty.status.name() == 'CONFIRMED'}">Confirm Duty</button>
+                            </form>
+                            <form th:action="@{/duties/status/{id}(id=${duty.id})}" method="post" style="display:inline;">
+                                <input type="hidden" name="status" value="COMPLETED"/>
+                                <button type="submit" class="btn btn-success btn-sm" id="btn-status-completed"
+                                        th:disabled="${duty.status.name() == 'COMPLETED'}">&#9989; Complete</button>
+                            </form>
+                            <form th:action="@{/duties/status/{id}(id=${duty.id})}" method="post" style="display:inline;">
+                                <input type="hidden" name="status" value="CANCELLED"/>
+                                <button type="submit" class="btn btn-danger btn-sm" id="btn-status-cancelled"
+                                        th:disabled="${duty.status.name() == 'CANCELLED'}"
+                                        sec:authorize="hasAnyRole('ADMIN','COORDINATOR')">&#10060; Cancel</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Duty Details Grid -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Assignment Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Duty ID</div>
+                            <div class="detail-value" id="dutyIdValue" th:text="'#' + ${duty.id}">#1</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Title</div>
+                            <div class="detail-value" id="dutyTitleValue" th:text="${duty.title}">Title</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Duty Date</div>
+                            <div class="detail-value" id="dutyDateValue" th:text="${#temporals.format(duty.dutyDate, 'yyyy-MM-dd')}">2026-10-25</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Timing</div>
+                            <div class="detail-value">
+                                <span th:if="${duty.startTime != null}" th:text="${#temporals.format(duty.startTime, 'HH:mm')}">09:00</span>
+                                <span th:if="${duty.startTime != null && duty.endTime != null}"> - </span>
+                                <span th:if="${duty.endTime != null}" th:text="${#temporals.format(duty.endTime, 'HH:mm')}">12:00</span>
+                                <span th:unless="${duty.startTime != null}">Not scheduled</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Location</div>
+                            <div class="detail-value" id="dutyLocationValue" th:text="${duty.location}">Main Hall</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Assigned Volunteer</div>
+                            <div class="detail-value" id="dutyVolunteerValue">
+                                <span th:if="${duty.volunteer != null}">
+                                    <strong th:text="${duty.volunteer.fullName}">Alice</strong>
+                                    (<span th:text="${duty.volunteer.email}">alice@example.com</span>)
+                                </span>
+                                <span th:unless="${duty.volunteer != null}" class="form-help">Unassigned</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Created By</div>
+                            <div class="detail-value" th:text="${duty.createdBy != null ? duty.createdBy.fullName : 'System'}">Coordinator</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Current Status</div>
+                            <div class="detail-value">
+                                <span class="badge" th:classappend="'badge-' + ${duty.status.name().toLowerCase()}"
+                                      th:text="${duty.status.displayName}">Status</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <div class="detail-label">Description / Instructions</div>
+                        <p style="margin-top: 6px; font-size: 14px; color: var(--text);"
+                           th:text="${duty.description != null && !#strings.isEmpty(duty.description) ? duty.description : 'No description provided.'}">
+                            Description text here
+                        </p>
+                    </div>
+
+                    <div style="margin-top: 16px;" th:if="${duty.notes != null && !#strings.isEmpty(duty.notes)}">
+                        <div class="detail-label">Notes & Remarks</div>
+                        <p style="margin-top: 6px; font-size: 14px; color: var(--text-light);" th:text="${duty.notes}">
+                            Internal notes
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

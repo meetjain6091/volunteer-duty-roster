@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Search Duties')}"></head>
+<body>
+    <div class="app-layout">
+        <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1>&#128269; Search Duties</h1>
+                    <div class="breadcrumb">Search duties by title, description, or location</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-body">
+                    <form th:action="@{/duties/search}" method="get">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <input type="text" id="searchInput" name="q" th:value="${searchQuery}"
+                                   class="form-control" placeholder="Search by duty title, keyword, or venue..."
+                                   style="flex: 1;" required>
+                            <button type="submit" class="btn btn-primary" id="btn-search-submit">&#128269; Search</button>
+                            <a th:href="@{/duties/search}" class="btn btn-outline">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            <div class="card" th:if="${searchQuery != null}">
+                <div class="card-header">
+                    <h3>Search Results for: "<span th:text="${searchQuery}">query</span>"</h3>
+                </div>
+                <div class="card-body">
+                    <div th:if="${#lists.isEmpty(duties)}" class="empty-state">
+                        <div class="empty-icon">&#128269;</div>
+                        <h3>No matching duties found</h3>
+                        <p>Try searching with another keyword or location.</p>
+                    </div>
+                    <div th:unless="${#lists.isEmpty(duties)}" class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Location</th>
+                                    <th>Assigned Volunteer</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="duty : ${duties}">
+                                    <td th:text="${duty.title}">Title</td>
+                                    <td th:text="${#temporals.format(duty.dutyDate, 'yyyy-MM-dd')}">Date</td>
+                                    <td th:text="${duty.location}">Location</td>
+                                    <td th:text="${duty.volunteerName}">Volunteer</td>
+                                    <td>
+                                        <span class="badge" th:classappend="'badge-' + ${duty.status.name().toLowerCase()}"
+                                              th:text="${duty.status.displayName}">Draft</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/duties/view/{id}(id=${duty.id})}" class="btn btn-outline btn-sm">View</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

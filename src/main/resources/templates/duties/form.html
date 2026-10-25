@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${editing} ? 'Edit Duty' : 'Create Duty')}"></head>
+<body>
+    <div class="app-layout">
+        <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1 th:text="${editing} ? '&#9998; Edit Duty' : '&#10133; Create New Duty'">Duty Form</h1>
+                    <div class="breadcrumb">
+                        <a th:href="@{/duties}">Duties</a> / <span th:text="${editing} ? 'Edit #' + ${duty.id} : 'New'">Form</span>
+                    </div>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <div class="card" style="max-width: 800px;">
+                <div class="card-header">
+                    <h3 th:text="${editing} ? 'Update Duty Assignment' : 'New Duty Assignment Details'">Duty Form</h3>
+                </div>
+                <div class="card-body">
+                    <form th:action="${editing == true} ? @{'/duties/edit/' + ${duty.id}} : @{/duties/create}"
+                          th:object="${duty}" method="post" id="dutyForm" novalidate>
+
+                        <div class="form-group">
+                            <label for="title">Duty Title *</label>
+                            <input type="text" id="title" th:field="*{title}" class="form-control"
+                                   placeholder="e.g., Weekend Food Bank Distribution">
+                            <div th:if="${#fields.hasErrors('title')}" class="form-error" th:errors="*{title}">Title Error</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" th:field="*{description}" class="form-control" rows="3"
+                                      placeholder="Provide tasks, instructions, guidelines for volunteers..."></textarea>
+                            <div th:if="${#fields.hasErrors('description')}" class="form-error" th:errors="*{description}">Desc Error</div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dutyDate">Duty Date *</label>
+                                <input type="date" id="dutyDate" th:field="*{dutyDate}" class="form-control">
+                                <div th:if="${#fields.hasErrors('dutyDate')}" class="form-error" th:errors="*{dutyDate}">Date Error</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Location *</label>
+                                <input type="text" id="location" th:field="*{location}" class="form-control"
+                                       placeholder="e.g., Community Centre Hall B">
+                                <div th:if="${#fields.hasErrors('location')}" class="form-error" th:errors="*{location}">Location Error</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="startTime">Start Time</label>
+                                <input type="time" id="startTime" th:field="*{startTime}" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="endTime">End Time</label>
+                                <input type="time" id="endTime" th:field="*{endTime}" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="volunteerId">Assign Volunteer</label>
+                                <select id="volunteerId" name="volunteerId" class="form-control">
+                                    <option value="">-- Select Volunteer (Optional) --</option>
+                                    <option th:each="vol : ${volunteers}"
+                                            th:value="${vol.id}"
+                                            th:text="${vol.fullName} + ' (' + ${vol.email} + ')'"
+                                            th:selected="${duty.volunteer != null && duty.volunteer.id == vol.id}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" th:if="${editing}">
+                                <label for="status">Duty Status</label>
+                                <select id="status" th:field="*{status}" class="form-control">
+                                    <option th:each="st : ${statuses}"
+                                            th:value="${st.name()}"
+                                            th:text="${st.displayName}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">Internal Notes</label>
+                            <textarea id="notes" th:field="*{notes}" class="form-control" rows="2"
+                                      placeholder="Emergency contacts, supervisor notes, supply check..."></textarea>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button type="submit" class="btn btn-primary" id="btn-save-duty">
+                                <span th:text="${editing} ? 'Save Changes' : 'Create Duty'">Submit</span>
+                            </button>
+                            <a th:href="@{/duties}" class="btn btn-outline" id="btn-cancel">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

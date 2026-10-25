@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${editing} ? 'Edit Volunteer' : 'Add Volunteer')}"></head>
+<body>
+    <div class="app-layout">
+        <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1 th:text="${editing} ? '&#9998; Edit Volunteer' : '&#10133; Add New Volunteer'">Volunteer Form</h1>
+                    <div class="breadcrumb">
+                        <a th:href="@{/volunteers}">Volunteers</a> / <span th:text="${editing} ? 'Edit #' + ${user.id} : 'New'">Form</span>
+                    </div>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <div class="card" style="max-width: 700px;">
+                <div class="card-header">
+                    <h3 th:text="${editing} ? 'Update Volunteer Account' : 'New Volunteer Account Information'">Account Information</h3>
+                </div>
+                <div class="card-body">
+                    <form th:action="${editing} ? @{/volunteers/edit/{id}(id=${user.id})} : @{/volunteers/create}"
+                          th:object="${user}" method="post" id="userForm">
+
+                        <div class="form-group">
+                            <label for="fullName">Full Name *</label>
+                            <input type="text" id="fullName" th:field="*{fullName}" class="form-control"
+                                   placeholder="e.g., Meet Jain" required>
+                            <div th:if="${#fields.hasErrors('fullName')}" class="form-error" th:errors="*{fullName}">Name Error</div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="username">Username *</label>
+                                <input type="text" id="username" th:field="*{username}" class="form-control"
+                                       placeholder="e.g., meetjain" th:readonly="${editing}" required>
+                                <div th:if="${#fields.hasErrors('username')}" class="form-error" th:errors="*{username}">User Error</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password <span th:if="${editing}">(leave blank to keep current)</span><span th:unless="${editing}">*</span></label>
+                                <input type="password" id="password" th:field="*{password}" class="form-control"
+                                       placeholder="Password" th:required="${!editing}">
+                                <div th:if="${#fields.hasErrors('password')}" class="form-error" th:errors="*{password}">Pass Error</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Email Address *</label>
+                                <input type="email" id="email" th:field="*{email}" class="form-control"
+                                       placeholder="e.g., meet@volunteer.org" required>
+                                <div th:if="${#fields.hasErrors('email')}" class="form-error" th:errors="*{email}">Email Error</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="text" id="phone" th:field="*{phone}" class="form-control"
+                                       placeholder="e.g., +91 9876543210">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="role">Role Permission *</label>
+                                <select id="role" th:field="*{role}" class="form-control">
+                                    <option th:each="r : ${roles}"
+                                            th:value="${r.name()}"
+                                            th:text="${r.displayName}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 28px;">
+                                <input type="checkbox" id="active" th:field="*{active}" style="width: 18px; height: 18px;">
+                                <label for="active" style="margin-bottom: 0;">Account Active</label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button type="submit" class="btn btn-primary" id="btn-save-user">
+                                <span th:text="${editing} ? 'Save Changes' : 'Create User'">Submit</span>
+                            </button>
+                            <a th:href="@{/volunteers}" class="btn btn-outline">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
