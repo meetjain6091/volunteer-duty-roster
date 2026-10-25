@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+    <div class="app-layout">
+        <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1>&#128200; Dashboard</h1>
+                    <div class="breadcrumb">Overview of volunteer duty assignments</div>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon primary">&#128203;</div>
+                    <div class="stat-content">
+                        <h3 th:text="${stats['total'] != null ? stats['total'] : 0}">0</h3>
+                        <p>Total Duties</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">&#128221;</div>
+                    <div class="stat-content">
+                        <h3 th:text="${stats['draft'] != null ? stats['draft'] : 0}">0</h3>
+                        <p>Draft</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">&#128073;</div>
+                    <div class="stat-content">
+                        <h3 th:text="${stats['assigned'] != null ? stats['assigned'] : 0}">0</h3>
+                        <p>Assigned</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">&#9989;</div>
+                    <div class="stat-content">
+                        <h3 th:text="${stats['confirmed'] != null ? stats['confirmed'] : 0}">0</h3>
+                        <p>Confirmed</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">&#127942;</div>
+                    <div class="stat-content">
+                        <h3 th:text="${stats['completed'] != null ? stats['completed'] : 0}">0</h3>
+                        <p>Completed</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger">&#128683;</div>
+                    <div class="stat-content">
+                        <h3 th:text="${stats['cancelled'] != null ? stats['cancelled'] : 0}">0</h3>
+                        <p>Cancelled</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- People Stats -->
+            <div class="stats-grid" style="margin-bottom: 32px;">
+                <div class="stat-card">
+                    <div class="stat-icon primary">&#128101;</div>
+                    <div class="stat-content">
+                        <h3 th:text="${totalVolunteers}">0</h3>
+                        <p>Volunteers</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">&#128188;</div>
+                    <div class="stat-content">
+                        <h3 th:text="${totalCoordinators}">0</h3>
+                        <p>Coordinators</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Duties -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>&#128197; Upcoming Duties</h3>
+                    <a th:href="@{/duties}" class="btn btn-outline btn-sm">View All</a>
+                </div>
+                <div class="card-body">
+                    <div th:if="${#lists.isEmpty(upcomingDuties)}" class="empty-state">
+                        <div class="empty-icon">&#128197;</div>
+                        <h3>No upcoming duties</h3>
+                        <p>Create a new duty to get started</p>
+                        <a th:href="@{/duties/create}" class="btn btn-primary"
+                           sec:authorize="hasAnyRole('ADMIN','COORDINATOR')">Create Duty</a>
+                    </div>
+                    <div th:unless="${#lists.isEmpty(upcomingDuties)}" class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Location</th>
+                                    <th>Volunteer</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="duty : ${upcomingDuties}" th:if="${#lists.size(upcomingDuties) <= 10 || dutyStat.index < 10}">
+                                    <td th:text="${duty.title}">Title</td>
+                                    <td th:text="${#temporals.format(duty.dutyDate, 'MMM dd, yyyy')}">Date</td>
+                                    <td>
+                                        <span th:if="${duty.startTime != null}" th:text="${#temporals.format(duty.startTime, 'HH:mm')}">--</span>
+                                        <span th:if="${duty.startTime != null && duty.endTime != null}"> - </span>
+                                        <span th:if="${duty.endTime != null}" th:text="${#temporals.format(duty.endTime, 'HH:mm')}">--</span>
+                                        <span th:unless="${duty.startTime != null}">--</span>
+                                    </td>
+                                    <td th:text="${duty.location}">Location</td>
+                                    <td th:text="${duty.volunteerName}">Volunteer</td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="'badge-' + ${duty.status.name().toLowerCase()}"
+                                              th:text="${duty.status.displayName}">Status</span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a th:href="@{/duties/view/{id}(id=${duty.id})}" class="action-btn view" title="View">&#128065;</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

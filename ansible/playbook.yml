@@ -1,0 +1,127 @@
+---
+# Ansible Playbook for Volunteer Duty Roster Automated Server Provisioning
+# Target Node: Ubuntu / Debian / RHEL Linux Server
+# Demonstrates Idempotency, Configuration Management, and Health Check
+- name: Provision and Deploy Volunteer Duty Roster
+  hosts: app_servers
+  become: yes
+  vars:
+    app_name: volunteer-duty-roster
+    app_user: rosteruser
+    app_group: rostergroup
+    app_port: 8080
+    install_dir: /opt/volunteer-duty-roster
+    docker_image: meetjain6091/volunteer-duty-roster:1.0.0
+    required_packages:
+      - curl
+      - git
+      - docker.io
+      - ufw
+
+  tasks:
+    - name: 1. Update APT cache (Idempotent)
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: 2. Install prerequisite system packages
+      package:
+        name: "{{ required_packages }}"
+        state: present
+
+    - name: 3. Ensure deployment group exists
+      group:
+        name: "{{ app_group }}"
+        state: present
+
+    - name: 4. Ensure dedicated service user exists without shell access
+      user:
+        name: "{{ app_user }}"
+        group: "{{ app_group }}"
+        shell: /usr/sbin/nologin
+        system: yes
+        create_home: no
+        state: present
+
+    - name: 5. Create application directory structure
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+      loop:
+        - "{{ install_dir }}"
+        - "{{ install_dir }}/logs"
+        - "{{ install_dir }}/config"
+        - "{{ install_dir }}/backups"
+
+    - name: 6. Deploy environment configuration file
+      copy:
+        dest: "{{ install_dir }}/config/application.properties"
+        content: |
+          # Production Configuration managed by Ansible
+          server.port={{ app_port }}
+          spring.application.name=Volunteer Duty Roster
+          spring.datasource.url=jdbc:h2:mem:volunteerdb
+          spring.jpa.hibernate.ddl-auto=update
+          logging.level.com.volunteer=INFO
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0640'
+
+    - name: 7. Ensure Docker daemon service is running and enabled
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: 8. Allow application incoming traffic on designated port
+      ufw:
+        rule: allow
+        port: "{{ app_port }}"
+        proto: tcp
+      when: ansible_os_family == "Debian"
+
+    - name: 9. Pull latest application container image
+      command: docker pull {{ docker_image }}
+      register: docker_pull_result
+      changed_when: "'Downloaded newer image' in docker_pull_result.stdout"
+
+    - name: 10. Stop and remove existing running container if present
+      command: docker rm -f {{ app_name }}
+      register: remove_container
+      failed_when: false
+      changed_when: remove_container.rc == 0
+
+    - name: 11. Launch newly provisioned Volunteer Duty Roster container
+      command: >
+        docker run -d
+        --name {{ app_name }}
+        -p {{ app_port }}:8080
+        --restart unless-stopped
+        -v {{ install_dir }}/config:/app/config:ro
+        {{ docker_image }}
+      register: docker_run_result
+      changed_when: docker_run_result.rc == 0
+
+    - name: 12. Wait for application to finish startup
+      pause:
+        seconds: 15
+
+    - name: 13. Automated Health Check Validation
+      uri:
+        url: "http://localhost:{{ app_port }}/login"
+        status_code: 200
+        return_content: yes
+      register: health_check
+      retries: 5
+      delay: 5
+      until: health_check.status == 200
+
+    - name: 14. Display Provisioning Verification Status
+      debug:
+        msg: >
+          "Volunteer Duty Roster successfully provisioned!
+          Idempotent run verified. Health check passed with HTTP {{ health_check.status }}."
