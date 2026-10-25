@@ -101,3 +101,6 @@ To demonstrate merge conflict management for academic evaluation:
 4. **Resolution:** The conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) are inspected, harmonized to retain both enum improvements, tested with `mvn compile`, and committed with:
    `git commit -m "fix(merge): resolve concurrent status workflow conflict between branches"`
 5. Tagged release `v1.0.0` is cut from `main`.
+
+## Current Release Baseline
+Current Baseline: Mainline develop branch v0.9.5-SNAPSHOT (Develop Mainline)
