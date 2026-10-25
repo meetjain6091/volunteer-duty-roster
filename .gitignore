@@ -62,7 +62,8 @@ spring-shell.log
 
 # Selenium
 test-output/
-screenshots/
+target/screenshots/
+!docs/screenshots/
 
 # Docker
 .docker/
